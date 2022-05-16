@@ -1,0 +1,31 @@
+// This is Single-line comments
+
+/*
+    This is Multi-line comments
+*/
+
+
+// This is a Protocol Declaration
+
+protocol SomeProtocol {
+    // Protocol definition goes here
+};
+
+// This is a Packet Structure Declaration
+
+packet MyPacket {
+    // Packet structure defianition goes here
+};
+
+// This is a Number Literals
+// 42, 0x2A, 0b00101010, '*'
+
+// This is a Enumeration Declaration
+
+enum SomeEnumeration {
+    // Enumeration definition goes here
+
+    Case0,
+    Case1,
+    Case2
+};
