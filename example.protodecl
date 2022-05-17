@@ -5,27 +5,58 @@
 */
 
 
-// This is a Protocol Declaration
 
-protocol SomeProtocol {
-    // Protocol definition goes here
-};
+// Primitive types
+//
+// Boolean: bool (true or false)
+// Integer: u8, i8, u16, i16, u32, i32, u64, i64, u128, i128
+// String: CString, String, CBytes, Bytes
+// SizedString: String8le, String16le, String32le, String64le, String8be, String16be, String32be, String64be
+// SizedBytes: Bytes8le, Bytes16le, Bytes32le, Bytes64le, Bytes8be, Bytes16be, Bytes32be, Bytes64be
+// Float: f32, f64
+// Array: [Type; size]
+// Padding: Padding(size) // size is the number of bits to pad
+// Bits: Bit(size) // size is the number of bits
 
-// This is a Packet Structure Declaration
-
-packet MyPacket {
-    // Packet structure defianition goes here
-};
 
 // This is a Number Literals
 // 42, 0x2A, 0b00101010, '*'
 
-// This is a Enumeration Declaration
 
-enum SomeEnumeration {
+// This is an Enumeration Declaration
+
+enum SomeEnumeration u8 {
     // Enumeration definition goes here
 
-    Case0,
-    Case1,
-    Case2
-};
+    Case0 = 0x00;
+    Case1 = 0x01;
+    Case2 = 0x02;
+    Case3 = 0x03;
+}
+
+
+
+// This is a Packet Structure Declaration
+
+packet MyPacket() {
+    // Packet structure defianition goes here
+
+    Bit(2) protocol_version;
+    Bit(2) packet_type;
+    Bit(2) packet_flags;
+    Padding(2);
+
+    SomeEnumeration some_enum;
+
+    u32 string_size;
+    String(size=string_size) string;
+}
+
+
+
+// This is a Protocol Declaration
+
+protocol SomeProtocol() {
+    // Protocol definition goes here
+}
+
