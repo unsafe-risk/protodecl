@@ -28,7 +28,7 @@
 enum SomeEnumeration u8 {
     // Enumeration definition goes here
 
-    Case0 + 0x00;
+    Case0 = 0x00;
     Case1 = 0x01;
     Case2 = 0x02;
     Case3 = 0x03;

@@ -122,7 +122,7 @@ impl Lexer {
 
     fn _read_identifier(&mut self) -> String {
         let position = self.position;
-        while self.current_char.is_alphanumeric() {
+        while self.current_char.is_alphanumeric() || self.current_char == '_' {
             if !self._readchar() {
                 break;
             }
@@ -142,8 +142,9 @@ impl Lexer {
             return None;
         }
 
-        let mut token = None;
+        let token;
 
+        //println!("{:?}", self.current_char);
         match self.current_char {
             '/' => match self._nextchar() {
                 Some('/') => {
@@ -175,21 +176,19 @@ impl Lexer {
                             break;
                         }
                     }
-                    self._readchar();
-                    self._readchar();
-
                     token = Some(self._new_token(TokenType::Comment(
                         self.data[position..self.position].iter().collect(),
                     )));
                     self._readchar();
+                    self._readchar();
                 }
                 _ => {
-                    self.last_token = Some(self._new_token(TokenType::Operator('/')));
+                    token = Some(self._new_token(TokenType::Operator('/')));
                 }
             },
 
             '+' | '-' | '*' | '%' | '=' | '<' | '>' | '!' | '&' | '|' | '^' | '~' => {
-                self.last_token = Some(self._new_token(TokenType::Operator(self.current_char)));
+                token = Some(self._new_token(TokenType::Operator(self.current_char)));
                 self._readchar();
             }
 
@@ -223,8 +222,6 @@ impl Lexer {
                         token = Some(self._new_token(TokenType::Identifier(identifier)));
                     }
                 }
-
-                self._readchar();
             }
         }
 
