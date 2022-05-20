@@ -14,9 +14,9 @@
 // SizedString: String8le, String16le, String32le, String64le, String8be, String16be, String32be, String64be
 // SizedBytes: Bytes8le, Bytes16le, Bytes32le, Bytes64le, Bytes8be, Bytes16be, Bytes32be, Bytes64be
 // Float: f32, f64
-// Array: [Type; size]
+// Array: Array(Type, size)
 // Padding: Padding(size) // size is the number of bits to pad
-// Bits: Bit(size) // size is the number of bits
+// Bits: Bits(size) // size is the number of bits
 
 
 // This is a Number Literals
@@ -28,7 +28,7 @@
 enum SomeEnumeration u8 {
     // Enumeration definition goes here
 
-    Case0 = 0x00;
+    Case0 + 0x00;
     Case1 = 0x01;
     Case2 = 0x02;
     Case3 = 0x03;
@@ -41,9 +41,9 @@ enum SomeEnumeration u8 {
 packet MyPacket() {
     // Packet structure defianition goes here
 
-    Bit(2) protocol_version;
-    Bit(2) packet_type;
-    Bit(2) packet_flags;
+    Bits(2) protocol_version;
+    Bits(2) packet_type;
+    Bits(2) packet_flags;
     Padding(2);
 
     SomeEnumeration some_enum;
