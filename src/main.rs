@@ -1,12 +1,12 @@
 #![allow(unused_imports)]
 
-use std::{fs, os, sync::Mutex};
+use std::{u64, fs, os, sync::Mutex, fmt::Error};
 
 #[derive(Debug, Clone)]
 enum TokenType {
     Identifier(String),
     Boolean(bool),
-    Number(i32),
+    Number(u64),
     Operator(char),
     Delimiter(char),
     Keyword(String),
@@ -27,6 +27,10 @@ fn main() {
     let tokens = lex("example.protodecl").unwrap();
 
     println!("{:?}", tokens);
+
+    for token in tokens {
+        println!("{:?}", token);
+    }
 }
 
 fn lex(_file: &str) -> Result<Vec<Token>, String> {
@@ -37,16 +41,81 @@ fn lex(_file: &str) -> Result<Vec<Token>, String> {
         let token = lex.next_token();
         match token {
             Some(t) => {
-                println!("{:?}", t);
+                //println!("{:?}", t);
                 tokens.push(t);
             }
             None => {
-                println!("EOF");
+                //println!("EOF");
                 break;
             }
         }
     }
+    tokens = _parse_number(tokens)?;
     Ok(tokens)
+}
+
+fn _parse_number(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
+    let mut parsed_tokens = Vec::new();
+    for _token in tokens {
+        match _token.token_type {
+            TokenType::Identifier(x) => {
+                if x.starts_with("0x") {
+                    let num = match u64::from_str_radix(&x[2..], 16) {
+                        Ok(n) => n,
+                        Err(e) => return Err(e.to_string()),
+                    };
+                    parsed_tokens.push(Token {
+                        token_type: TokenType::Number(num),
+                        line: _token.line,
+                        column: _token.column,
+                        index: _token.index,
+                    });
+                } else if x.starts_with("0b") {
+                    let num = match u64::from_str_radix(&x[2..], 2) {
+                        Ok(n) => n,
+                        Err(e) => return Err(e.to_string()),
+                    };
+                    parsed_tokens.push(Token {
+                        token_type: TokenType::Number(num),
+                        line: _token.line,
+                        column: _token.column,
+                        index: _token.index,
+                    });
+                } else {
+                    // If first character is a number, then it's a number
+                    let c = x.chars().nth(0);
+                    match c {
+                        Some(c) => {
+                            if c.is_digit(10) {
+                                let num = match u64::from_str_radix(&x, 10) {
+                                    Ok(n) => n,
+                                    Err(e) => return Err(e.to_string()),
+                                };
+                                parsed_tokens.push(Token {
+                                    token_type: TokenType::Number(num),
+                                    line: _token.line,
+                                    column: _token.column,
+                                    index: _token.index,
+                                });
+                            } else {
+                                parsed_tokens.push(Token {
+                                    token_type: TokenType::Identifier(x),
+                                    line: _token.line,
+                                    column: _token.column,
+                                    index: _token.index,
+                                });
+                            }
+                        }
+                        None => {}
+                    }
+                }
+            }
+            _ => {
+                parsed_tokens.push(_token);
+            }
+        }
+    }
+    Ok(parsed_tokens)
 }
 
 struct Lexer {
