@@ -6,7 +6,7 @@ type Tree struct {
 	PackageName string
 	FileName    string
 
-	Root Node
+	Nodes []Node
 }
 
 type Node interface {
@@ -55,4 +55,14 @@ type ProtocolType struct {
 
 func (p *ProtocolType) Pos() token.Position {
 	return p.Position
+}
+
+type NumberLiteralType struct {
+	Position token.Position
+
+	Value uint64
+}
+
+func (n *NumberLiteralType) Pos() token.Position {
+	return n.Position
 }
