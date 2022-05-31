@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"github.com/lemon-mint/protodecl/token"
@@ -42,14 +44,14 @@ func (l *Lexer) newToken(t token.TokenType) token.Token {
 		Position: token.Position{
 			File: l.FileName,
 			Line: l.Line,
-			Col:  l.Col,
+			Col:  l.Col - 1,
 		},
 	}
 }
 
 func (l *Lexer) readChar() bool {
 	if l.Cursor >= len(l.Data) {
-		l.CurrentChar = '\n'
+		l.CurrentChar = 0
 		l.LastToken = new(token.Token)
 		*l.LastToken = l.newToken(token.TokenType{Type: token.EOF})
 		return false
@@ -63,7 +65,7 @@ func (l *Lexer) readChar() bool {
 	l.Position = l.Cursor
 	l.Cursor++
 	l.Col++
-
+	//fmt.Printf("%c at %d:%d\n", l.CurrentChar, l.Line, l.Col)
 	return true
 }
 
@@ -94,44 +96,74 @@ func (l *Lexer) nextChar() (c rune, ok bool) {
 	return l.Data[l.Cursor], true
 }
 
+type ParserError struct {
+	Message  string
+	Filename string
+	Line     int
+	Col      int
+	Index    int
+}
+
+func (e ParserError) Error() string {
+	return fmt.Sprintf("%s:%d:%d: %s", e.Filename, e.Line, e.Col, e.Message)
+}
+
+func (l *Lexer) dumpError(msg string) *ParserError {
+	return &ParserError{
+		Message:  msg,
+		Filename: l.FileName,
+		Line:     l.Line,
+		Col:      l.Col,
+		Index:    l.Position,
+	}
+}
+
 func (l *Lexer) NextToken() (t token.Token, err error) {
 	if !l.skipWhitespace() {
 		return token.Token{}, io.EOF
 	}
 
-	fmt.Printf("CurrentChar: %x\n", l.CurrentChar)
+	//fmt.Printf("CurrentChar: %x\n", l.CurrentChar)
 	switch l.CurrentChar {
 	case '/':
+		line, col := l.Line, l.Col
 		nextC, ok := l.nextChar()
 		if !ok {
-			return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+			return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("unexpected EOF")
 		}
 		switch nextC {
 		case '/':
-			if !l.readChar() || !l.readChar() {
-				return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+			if !l.readChar() {
+				return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected '\\n' but got EOF")
+			}
+			if !l.readChar() {
+				return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected '\\n' but got EOF")
 			}
 			position := l.Position
 			for l.CurrentChar != '\n' {
 				if !l.readChar() {
-					return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+					break
 				}
 			}
 			commentStr := string(l.Data[position:l.Position])
-			l.readChar()
-			return l.newToken(token.TokenType{Type: token.Comment, Value: commentStr}), nil
+			t := l.newToken(token.TokenType{Type: token.Comment, Value: commentStr})
+			t.Position.Line, t.Position.Col = line, col
+			return t, nil
 		case '*':
-			if !l.readChar() || !l.readChar() {
-				return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+			if !l.readChar() {
+				return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected END_OF_COMMENT but got EOF")
+			}
+			if !l.readChar() {
+				return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected END_OF_COMMENT but got EOF")
 			}
 			position := l.Position
 			for {
 				if !l.readChar() {
-					return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+					return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected END_OF_COMMENT but got EOF")
 				}
 				nextC, ok := l.nextChar()
 				if !ok {
-					return l.newToken(token.TokenType{Type: token.EOF}), io.EOF
+					return l.newToken(token.TokenType{Type: token.EOF}), l.dumpError("Expected END_OF_COMMENT but got EOF")
 				}
 				if l.CurrentChar == '*' && nextC == '/' {
 					break
@@ -140,7 +172,9 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 			commentStr := string(l.Data[position:l.Position])
 			l.readChar()
 			l.readChar()
-			return l.newToken(token.TokenType{Type: token.Comment, Value: commentStr}), nil
+			t := l.newToken(token.TokenType{Type: token.Comment, Value: commentStr})
+			t.Position.Line, t.Position.Col = line, col
+			return t, nil
 		default:
 			t := l.newToken(token.TokenType{Type: token.Operator, Value: "/"})
 			l.readChar()
@@ -156,6 +190,7 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 		return t, nil
 
 	default:
+		line, col := l.Line, l.Col-1
 		id := l.readIdentifier()
 		switch id {
 		case "enum", "packet", "protocol", "message", "field",
@@ -169,9 +204,59 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 			"Array", "Padding", "Bits",
 			"f32", "f64",
 			"true", "false":
-			return l.newToken(token.TokenType{Type: token.Keyword, Value: id}), nil
+			t := l.newToken(token.TokenType{Type: token.Keyword, Value: id})
+			t.Line, t.Col = line, col
+			return t, nil
 		default:
-			return l.newToken(token.TokenType{Type: token.Identifier, Value: id}), nil
+			// t := l.newToken(token.TokenType{Type: token.Identifier, Value: id})
+			// t.Line, t.Col = line, col
+
+			if len(id) <= 0 {
+				t := l.newToken(token.TokenType{Type: token.Identifier, Value: id})
+				t.Line, t.Col = line, col
+			}
+
+			// Parse number
+
+			if id[0] >= '0' && id[0] <= '9' {
+				if strings.HasPrefix(id, "0x") {
+					// parse hex number
+					num, err := strconv.ParseUint(id[2:], 16, 64)
+					if err != nil {
+						return l.newToken(token.TokenType{Type: token.Number}), l.dumpError("invalid hex number (Error: " + strconv.Quote(err.Error()) + ")")
+					}
+					t := l.newToken(token.TokenType{Type: token.Number, Value: id[2:]})
+					t.Line, t.Col = line, col
+					t.Value = strconv.FormatUint(num, 10)
+					return t, nil
+				} else if strings.HasPrefix(id, "0b") {
+					// parse binary number
+					num, err := strconv.ParseUint(id[2:], 2, 64)
+					if err != nil {
+						return l.newToken(token.TokenType{Type: token.Number}), l.dumpError("invalid binary number (Error: " + strconv.Quote(err.Error()) + ")")
+					}
+					t := l.newToken(token.TokenType{Type: token.Number, Value: id[2:]})
+					t.Line, t.Col = line, col
+					t.Value = strconv.FormatUint(num, 10)
+					return t, nil
+				} else {
+					// parse decimal number
+					num, err := strconv.ParseUint(id, 10, 64)
+					if err != nil {
+						return l.newToken(token.TokenType{Type: token.Number}), l.dumpError("invalid decimal number (Error: " + strconv.Quote(err.Error()) + ")")
+					}
+					t := l.newToken(token.TokenType{Type: token.Number, Value: id})
+					t.Line, t.Col = line, col
+					t.Value = strconv.FormatUint(num, 10)
+					return t, nil
+				}
+			}
+
+			// Parse string
+
+			t := l.newToken(token.TokenType{Type: token.Identifier, Value: id})
+			t.Line, t.Col = line, col
+			return t, nil
 		}
 	}
 	//panic("unreachable")
