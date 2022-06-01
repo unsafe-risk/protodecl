@@ -96,7 +96,7 @@ func (l *Lexer) nextChar() (c rune, ok bool) {
 	return l.Data[l.Cursor], true
 }
 
-type ParserError struct {
+type LexerError struct {
 	Message  string
 	Filename string
 	Line     int
@@ -104,12 +104,12 @@ type ParserError struct {
 	Index    int
 }
 
-func (e ParserError) Error() string {
+func (e LexerError) Error() string {
 	return fmt.Sprintf("%s:%d:%d: %s", e.Filename, e.Line, e.Col, e.Message)
 }
 
-func (l *Lexer) dumpError(msg string) *ParserError {
-	return &ParserError{
+func (l *Lexer) dumpError(msg string) *LexerError {
+	return &LexerError{
 		Message:  msg,
 		Filename: l.FileName,
 		Line:     l.Line,
