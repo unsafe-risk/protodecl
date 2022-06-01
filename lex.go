@@ -184,7 +184,7 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 		t := l.newToken(token.TokenType{Type: token.Operator, Value: string(l.CurrentChar)})
 		l.readChar()
 		return t, nil
-	case '{', '}', '(', ')', '[', ']', ';':
+	case '{', '}', '(', ')', '[', ']', ';', ':', '.', ',':
 		t := l.newToken(token.TokenType{Type: token.Delimiter, Value: string(l.CurrentChar)})
 		l.readChar()
 		return t, nil
@@ -197,6 +197,7 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 			"bool", "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128",
 			"CString", "String",
 			"Cbytes", "Bytes",
+			"LongString", "LongBytes",
 			"Bytes8le", "Bytes16le", "Bytes32le", "Bytes64le",
 			"Bytes8be", "Bytes16be", "Bytes32be", "Bytes64be",
 			"String8le", "String16le", "String32le", "String64le",

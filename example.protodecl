@@ -10,7 +10,8 @@
 //
 // Boolean: bool (true or false)
 // Integer: u8, i8, u16, i16, u32, i32, u64, i64, u128, i128
-// String: CString, String, CBytes, Bytes
+// String: CString, String, CBytes, Bytes (maxsize: u32)
+// LongString: LongString, LongBytes (maxsize: u64)
 // SizedString: String8le, String16le, String32le, String64le, String8be, String16be, String32be, String64be
 // SizedBytes: Bytes8le, Bytes16le, Bytes32le, Bytes64le, Bytes8be, Bytes16be, Bytes32be, Bytes64be
 // Float: f32, f64
@@ -38,7 +39,7 @@ enum SomeEnumeration u8 {
 
 // This is a Packet Structure Declaration
 
-packet MyPacket() {
+packet MyPacket(packet_id: u8) {
     // Packet structure defianition goes here
 
     Bits(2) protocol_version;
