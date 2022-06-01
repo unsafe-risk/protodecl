@@ -30,6 +30,15 @@ func (p *Parser) Result() ast.Tree {
 
 func (p *Parser) skipComments() {
 	for p.Position < len(p.Tokens) && p.Tokens[p.Position].Type == token.Comment {
+		/* // Preserve comments
+		value := p.Tokens[p.Position].Value
+		IsMultiline := strings.Contains(value, "\n")
+		p.Out.Nodes = append(p.Out.Nodes, &ast.CommentType{
+			Value:       value,
+			Position:    p.Tokens[p.Position].Position,
+			IsMultiline: IsMultiline,
+		})
+		*/
 		p.Position++
 	}
 }
