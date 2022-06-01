@@ -50,16 +50,5 @@ packet MyPacket(packet_id: u8) {
     SomeEnumeration some_enum;
 
     u32 string_size;
-    String(size=string_size) string;
+    String(string_size) string;
 }
-
-
-/*
-
-    // This is a Protocol Declaration
-
-    protocol SomeProtocol() {
-        // Protocol definition goes here
-    }
-
-*/

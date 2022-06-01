@@ -89,3 +89,14 @@ type CommentType struct {
 func (c *CommentType) Pos() token.Position {
 	return c.Position
 }
+
+type TypeType struct {
+	Position token.Position
+
+	TypeName  string
+	Arguments []Node
+}
+
+func (t *TypeType) Pos() token.Position {
+	return t.Position
+}

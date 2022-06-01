@@ -73,7 +73,7 @@ func (p *Parser) lenCheck() bool {
 }
 
 func (p *Parser) Parse() error {
-	p.Out = ast.Tree{}
+	p.Out.PackageName = p.FileName
 	p.Out.FileName = p.FileName
 	p.Out.Nodes = p.Out.Nodes[:0]
 
@@ -387,23 +387,55 @@ func (p *Parser) parseType() (ast.Node, error) {
 		return nil, p.error("unexpected EOF")
 	}
 	tkn = p.Tokens[p.Position]
+
+	var args []ast.Node
 	if tkn.Type == token.Delimiter && tkn.Value == "(" {
-		// TODO: parse function
+		p.Position++
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("unexpected EOF")
+		}
 		for {
-			p.Position++
-			p.skipComments()
-			if !p.lenCheck() {
-				return nil, p.error("unexpected EOF")
-			}
 			tkn = p.Tokens[p.Position]
 			if tkn.Type == token.Delimiter && tkn.Value == ")" {
 				p.Position++
 				break
 			}
+
+			if tkn.Type == token.Delimiter && tkn.Value == "," {
+				p.Position++
+				p.skipComments()
+				if !p.lenCheck() {
+					return nil, p.error("unexpected EOF")
+				}
+				tkn = p.Tokens[p.Position]
+			}
+
+			switch tkn.Type {
+			case token.Identifier:
+				args = append(args, &ast.IdentifierType{
+					Position: tkn.Position,
+					Value:    tkn.Value,
+				})
+				p.Position++
+				p.skipComments()
+				if !p.lenCheck() {
+					return nil, p.error("unexpected EOF")
+				}
+			case token.Number:
+				n, err := p.parseNumber()
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, n)
+			default:
+				return nil, p.error(fmt.Sprintf("expected identifier or number but got %s", tkn))
+			}
 		}
 	}
-	return &ast.IdentifierType{
-		Position: tkn.Position,
-		Value:    name,
+	return &ast.TypeType{
+		Position:  tkn.Position,
+		TypeName:  name,
+		Arguments: args,
 	}, nil
 }

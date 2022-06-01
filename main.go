@@ -1,11 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/kr/pretty"
 	"github.com/unsafe-risk/protodecl/token"
 )
 
@@ -30,7 +30,6 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(tok)
 		tokens = append(tokens, tok)
 		if tok.Type == token.EOF {
 			break
@@ -44,5 +43,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	pretty.Println(parser.Result())
+	b, err := json.MarshalIndent(parser.Result(), "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(string(b))
 }

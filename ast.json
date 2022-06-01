@@ -1,0 +1,221 @@
+{
+  "PackageName": "/workspaces/protodecl/example.protodecl",
+  "FileName": "/workspaces/protodecl/example.protodecl",
+  "Nodes": [
+    {
+      "Position": {
+        "File": "/workspaces/protodecl/example.protodecl",
+        "Line": 36,
+        "Col": 1
+      },
+      "Name": "SomeEnumeration",
+      "ReturnType": {
+        "Position": {
+          "File": "",
+          "Line": 0,
+          "Col": 0
+        },
+        "Value": "u8"
+      },
+      "Values": [
+        {
+          "Key": "Case0",
+          "Value": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 32,
+              "Col": 13
+            },
+            "Value": 0
+          }
+        },
+        {
+          "Key": "Case1",
+          "Value": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 33,
+              "Col": 13
+            },
+            "Value": 1
+          }
+        },
+        {
+          "Key": "Case2",
+          "Value": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 34,
+              "Col": 13
+            },
+            "Value": 2
+          }
+        },
+        {
+          "Key": "Case3",
+          "Value": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 35,
+              "Col": 13
+            },
+            "Value": 3
+          }
+        }
+      ]
+    },
+    {
+      "Position": {
+        "File": "/workspaces/protodecl/example.protodecl",
+        "Line": 54,
+        "Col": 1
+      },
+      "Name": "MyPacket",
+      "Parameters": [
+        {
+          "Name": "packet_id",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 42,
+              "Col": 30
+            },
+            "TypeName": "u8",
+            "Arguments": null
+          }
+        }
+      ],
+      "Fields": [
+        {
+          "Name": "protocol_version",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 45,
+              "Col": 11
+            },
+            "TypeName": "Bits",
+            "Arguments": [
+              {
+                "Position": {
+                  "File": "/workspaces/protodecl/example.protodecl",
+                  "Line": 45,
+                  "Col": 10
+                },
+                "Value": 2
+              }
+            ]
+          }
+        },
+        {
+          "Name": "packet_type",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 46,
+              "Col": 11
+            },
+            "TypeName": "Bits",
+            "Arguments": [
+              {
+                "Position": {
+                  "File": "/workspaces/protodecl/example.protodecl",
+                  "Line": 46,
+                  "Col": 10
+                },
+                "Value": 2
+              }
+            ]
+          }
+        },
+        {
+          "Name": "packet_flags",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 47,
+              "Col": 11
+            },
+            "TypeName": "Bits",
+            "Arguments": [
+              {
+                "Position": {
+                  "File": "/workspaces/protodecl/example.protodecl",
+                  "Line": 47,
+                  "Col": 10
+                },
+                "Value": 2
+              }
+            ]
+          }
+        },
+        {
+          "Name": "_",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 48,
+              "Col": 14
+            },
+            "TypeName": "Padding",
+            "Arguments": [
+              {
+                "Position": {
+                  "File": "/workspaces/protodecl/example.protodecl",
+                  "Line": 48,
+                  "Col": 13
+                },
+                "Value": 2
+              }
+            ]
+          }
+        },
+        {
+          "Name": "some_enum",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 50,
+              "Col": 21
+            },
+            "TypeName": "SomeEnumeration",
+            "Arguments": null
+          }
+        },
+        {
+          "Name": "string_size",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 52,
+              "Col": 9
+            },
+            "TypeName": "u32",
+            "Arguments": null
+          }
+        },
+        {
+          "Name": "string",
+          "Type": {
+            "Position": {
+              "File": "/workspaces/protodecl/example.protodecl",
+              "Line": 53,
+              "Col": 23
+            },
+            "TypeName": "String",
+            "Arguments": [
+              {
+                "Position": {
+                  "File": "/workspaces/protodecl/example.protodecl",
+                  "Line": 53,
+                  "Col": 12
+                },
+                "Value": "string_size"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
