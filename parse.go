@@ -16,6 +16,18 @@ type Parser struct {
 	Position int
 }
 
+func NewParser(filename string, data []token.Token) *Parser {
+	return &Parser{
+		FileName: filename,
+		Tokens:   data,
+		Position: 0,
+	}
+}
+
+func (p *Parser) Result() ast.Tree {
+	return p.Out
+}
+
 func (p *Parser) skipComments() {
 	for p.Position < len(p.Tokens) && p.Tokens[p.Position].Type == token.Comment {
 		p.Position++
