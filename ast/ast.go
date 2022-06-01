@@ -66,3 +66,13 @@ type NumberLiteralType struct {
 func (n *NumberLiteralType) Pos() token.Position {
 	return n.Position
 }
+
+type IdentifierType struct {
+	Position token.Position
+
+	Value string
+}
+
+func (i *IdentifierType) Pos() token.Position {
+	return i.Position
+}
