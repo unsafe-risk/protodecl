@@ -32,15 +32,17 @@ func (e *EnumerationType) Pos() token.Position {
 }
 
 type PacketField struct {
-	Type Node
 	Name string
+	Type Node
 }
 
 type PacketType struct {
 	Position token.Position
 
-	Name   string
-	Fields []PacketField
+	Name string
+
+	Parameters []PacketField
+	Fields     []PacketField
 }
 
 func (p *PacketType) Pos() token.Position {
