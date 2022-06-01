@@ -168,7 +168,7 @@ L:
 				return nil, p.error("unexpected EOF")
 			}
 			tkn = p.Tokens[p.Position]
-			if tkn.Type != token.Delimiter || tkn.Value != "=" {
+			if tkn.Type != token.Operator || tkn.Value != "=" {
 				return nil, p.error(fmt.Sprintf("expected '=' but got %s", tkn))
 			}
 			p.Position++
@@ -180,6 +180,15 @@ L:
 			if err != nil {
 				return nil, err
 			}
+			p.skipComments()
+			if !p.lenCheck() {
+				return nil, p.error("unexpected EOF")
+			}
+			tkn = p.Tokens[p.Position]
+			if tkn.Type != token.Delimiter || tkn.Value != ";" {
+				return nil, p.error(fmt.Sprintf("expected ';' but got %s", tkn))
+			}
+			p.Position++
 			values = append(values, v)
 		default:
 			return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
@@ -204,6 +213,10 @@ func (p *Parser) parseType() (ast.Node, error) {
 	switch tkn.Value {
 	case "enum":
 		return p.parseEnum()
+	case "packet":
+		return nil, nil
+	case "protocol":
+		return nil, nil
 	default:
 		return nil, p.error(fmt.Sprintf("unexpected keyword %s", tkn))
 	}

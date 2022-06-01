@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 	"unicode"
@@ -120,7 +119,7 @@ func (l *Lexer) dumpError(msg string) *LexerError {
 
 func (l *Lexer) NextToken() (t token.Token, err error) {
 	if !l.skipWhitespace() {
-		return token.Token{}, io.EOF
+		return l.newToken(token.TokenType{Type: token.EOF}), nil
 	}
 
 	//fmt.Printf("CurrentChar: %x\n", l.CurrentChar)
