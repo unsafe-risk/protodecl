@@ -45,7 +45,7 @@ packet MyPacket(packet_id: u8) {
     Bits(2) protocol_version;
     Bits(2) packet_type;
     Bits(2) packet_flags;
-    Padding(2);
+    Padding(2) _;
 
     SomeEnumeration some_enum;
 
@@ -54,10 +54,12 @@ packet MyPacket(packet_id: u8) {
 }
 
 
+/*
 
-// This is a Protocol Declaration
+    // This is a Protocol Declaration
 
-protocol SomeProtocol() {
-    // Protocol definition goes here
-}
+    protocol SomeProtocol() {
+        // Protocol definition goes here
+    }
 
+*/

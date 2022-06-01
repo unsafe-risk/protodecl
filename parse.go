@@ -95,6 +95,11 @@ func (p *Parser) Parse() error {
 			default:
 				return p.error(fmt.Sprintf("unexpected keyword %s", p.Tokens[p.Position].Value))
 			}
+		default:
+			if p.Tokens[p.Position].Type == token.EOF {
+				return nil
+			}
+			return p.error(fmt.Sprintf("unexpected token %s", p.Tokens[p.Position]))
 		}
 	}
 
@@ -311,7 +316,7 @@ func (p *Parser) parsePacket() (*ast.PacketType, error) {
 			return nil, p.error("unexpected EOF")
 		}
 
-		if p.Tokens[p.Position].Type != token.Identifier {
+		if p.Tokens[p.Position].Type != token.Identifier && p.Tokens[p.Position].Type != token.Keyword {
 			return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
 		}
 		name := p.Tokens[p.Position].Value
@@ -341,40 +346,29 @@ func (p *Parser) parsePacket() (*ast.PacketType, error) {
 	}, nil
 }
 
+func (p *Parser) parseProtocol() (*ast.ProtocolType, error) {
+	tkn := p.Tokens[p.Position]
+	if tkn.Type != token.Keyword || tkn.Value != "protocol" {
+		return nil, p.error(fmt.Sprintf("expected \"protocol\" but got %s", tkn))
+	}
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+
+	if p.Tokens[p.Position].Type != token.Identifier {
+		return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
+	}
+	return nil, nil
+}
+
 func (p *Parser) parseType() (ast.Node, error) {
 	p.skipComments()
 	tkn := p.Tokens[p.Position]
 
-	if tkn.Type == token.Identifier {
-		name := tkn.Value
-		p.Position++
-		p.skipComments()
-		if !p.lenCheck() {
-			return nil, p.error("unexpected EOF")
-		}
-		tkn = p.Tokens[p.Position]
-		if tkn.Type == token.Delimiter && tkn.Value == "(" {
-			// TODO: parse function
-			for {
-				p.Position++
-				p.skipComments()
-				if !p.lenCheck() {
-					return nil, p.error("unexpected EOF")
-				}
-				tkn = p.Tokens[p.Position]
-				if tkn.Type == token.Delimiter && tkn.Value == ")" {
-					break
-				}
-			}
-		}
-		return &ast.IdentifierType{
-			Position: tkn.Position,
-			Value:    name,
-		}, nil
-	}
-
-	if tkn.Type != token.Keyword {
-		return nil, p.error(fmt.Sprintf("expected keyword but got %s", tkn))
+	if tkn.Type != token.Keyword && tkn.Type != token.Identifier {
+		return nil, p.error(fmt.Sprintf("expected type but got %s", tkn))
 	}
 
 	switch tkn.Value {
@@ -383,9 +377,33 @@ func (p *Parser) parseType() (ast.Node, error) {
 	case "packet":
 		return p.parsePacket()
 	case "protocol":
-		return nil, nil
-	default:
-		return nil, p.error(fmt.Sprintf("expected type but got %s", tkn))
+		return p.parseProtocol()
 	}
-	// panic("unreachable")
+
+	name := tkn.Value
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+	tkn = p.Tokens[p.Position]
+	if tkn.Type == token.Delimiter && tkn.Value == "(" {
+		// TODO: parse function
+		for {
+			p.Position++
+			p.skipComments()
+			if !p.lenCheck() {
+				return nil, p.error("unexpected EOF")
+			}
+			tkn = p.Tokens[p.Position]
+			if tkn.Type == token.Delimiter && tkn.Value == ")" {
+				p.Position++
+				break
+			}
+		}
+	}
+	return &ast.IdentifierType{
+		Position: tkn.Position,
+		Value:    name,
+	}, nil
 }
