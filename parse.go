@@ -203,9 +203,167 @@ L:
 	}, nil
 }
 
+func (p *Parser) parsePacket() (*ast.PacketType, error) {
+	var err error
+	tkn := p.Tokens[p.Position]
+	if tkn.Type != token.Keyword || tkn.Value != "packet" {
+		return nil, p.error(fmt.Sprintf("expected \"packet\" but got %s", tkn))
+	}
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+	if p.Tokens[p.Position].Type != token.Identifier {
+		return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
+	}
+	name := p.Tokens[p.Position].Value
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+
+	if p.Tokens[p.Position].Type != token.Delimiter || p.Tokens[p.Position].Value != "(" {
+		return nil, p.error(fmt.Sprintf("expected '(' but got %s", tkn))
+	}
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+	var args []ast.PacketField
+
+	for {
+		tkn = p.Tokens[p.Position]
+		if tkn.Type == token.Delimiter && tkn.Value == ")" {
+			p.Position++
+			break
+		}
+		if tkn.Type != token.Identifier {
+			return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
+		}
+		arg := ast.PacketField{
+			Name: tkn.Value,
+		}
+		p.Position++
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("unexpected EOF")
+		}
+
+		tkn = p.Tokens[p.Position]
+		if tkn.Type != token.Delimiter || tkn.Value != ":" {
+			return nil, p.error(fmt.Sprintf("expected ':' but got %s", tkn))
+		}
+
+		p.Position++
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("expected <Type> but got EOF")
+		}
+		arg.Type, err = p.parseType()
+		if err != nil {
+			return nil, err
+		}
+
+		args = append(args, arg)
+	}
+
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+
+	if p.Tokens[p.Position].Type != token.Delimiter || p.Tokens[p.Position].Value != "{" {
+		return nil, p.error(fmt.Sprintf("expected '{' but got %s", tkn))
+	}
+	p.Position++
+	p.skipComments()
+	if !p.lenCheck() {
+		return nil, p.error("unexpected EOF")
+	}
+
+	var fields []ast.PacketField
+	for {
+		tkn = p.Tokens[p.Position]
+		if tkn.Type == token.Delimiter && tkn.Value == "}" {
+			p.Position++
+			break
+		}
+
+		t, err := p.parseType()
+		if err != nil {
+			return nil, err
+		}
+
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("unexpected EOF")
+		}
+
+		if p.Tokens[p.Position].Type != token.Identifier {
+			return nil, p.error(fmt.Sprintf("expected identifier but got %s", tkn))
+		}
+		name := p.Tokens[p.Position].Value
+		p.Position++
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("unexpected EOF")
+		}
+
+		if p.Tokens[p.Position].Type != token.Delimiter || p.Tokens[p.Position].Value != ";" {
+			return nil, p.error(fmt.Sprintf("expected ';' but got %s", tkn))
+		}
+		p.Position++
+		p.skipComments()
+
+		fields = append(fields, ast.PacketField{
+			Name: name,
+			Type: t,
+		})
+	}
+
+	return &ast.PacketType{
+		Position:   tkn.Position,
+		Name:       name,
+		Parameters: args,
+		Fields:     fields,
+	}, nil
+}
+
 func (p *Parser) parseType() (ast.Node, error) {
 	p.skipComments()
 	tkn := p.Tokens[p.Position]
+
+	if tkn.Type == token.Identifier {
+		name := tkn.Value
+		p.Position++
+		p.skipComments()
+		if !p.lenCheck() {
+			return nil, p.error("unexpected EOF")
+		}
+		tkn = p.Tokens[p.Position]
+		if tkn.Type == token.Delimiter && tkn.Value == "(" {
+			// TODO: parse function
+			for {
+				p.Position++
+				p.skipComments()
+				if !p.lenCheck() {
+					return nil, p.error("unexpected EOF")
+				}
+				tkn = p.Tokens[p.Position]
+				if tkn.Type == token.Delimiter && tkn.Value == ")" {
+					break
+				}
+			}
+		}
+		return &ast.IdentifierType{
+			Position: tkn.Position,
+			Value:    name,
+		}, nil
+	}
+
 	if tkn.Type != token.Keyword {
 		return nil, p.error(fmt.Sprintf("expected keyword but got %s", tkn))
 	}
@@ -214,11 +372,11 @@ func (p *Parser) parseType() (ast.Node, error) {
 	case "enum":
 		return p.parseEnum()
 	case "packet":
-		return nil, nil
+		return p.parsePacket()
 	case "protocol":
 		return nil, nil
 	default:
-		return nil, p.error(fmt.Sprintf("unexpected keyword %s", tkn))
+		return nil, p.error(fmt.Sprintf("expected type but got %s", tkn))
 	}
 	// panic("unreachable")
 }
