@@ -27,7 +27,7 @@ func main() {
 	for {
 		tok, err := lexer.NextToken()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(ErrorPrint(err, string(file)))
 			os.Exit(1)
 		}
 		tokens = append(tokens, tok)
@@ -39,7 +39,7 @@ func main() {
 	parser := NewParser(absfn, tokens)
 	err = parser.Parse()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(ErrorPrint(err, string(file)))
 		os.Exit(1)
 	}
 

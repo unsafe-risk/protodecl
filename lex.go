@@ -214,6 +214,7 @@ func (l *Lexer) NextToken() (t token.Token, err error) {
 			if len(id) <= 0 {
 				t := l.newToken(token.TokenType{Type: token.Identifier, Value: id})
 				t.Line, t.Col = line, col
+				return t, l.dumpError("unknown identifier")
 			}
 
 			// Parse number

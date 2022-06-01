@@ -110,7 +110,7 @@ func (p *Parser) parseNumber() (*ast.NumberLiteralType, error) {
 	tkn := p.Tokens[p.Position]
 	value, err := strconv.ParseUint(tkn.Value, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, p.error(err.Error())
 	}
 	p.Position++
 
@@ -141,19 +141,9 @@ func (p *Parser) parseEnum() (*ast.EnumerationType, error) {
 		return nil, p.error("unexpected EOF")
 	}
 
-	var rettype *ast.IdentifierType = new(ast.IdentifierType)
-	switch p.Tokens[p.Position].Type {
-	case token.Keyword:
-		rettype.Value = p.Tokens[p.Position].Value
-	case token.Identifier:
-		rettype.Value = p.Tokens[p.Position].Value
-	default:
-		return nil, p.error(fmt.Sprintf("expected type but got %s", tkn))
-	}
-	p.Position++
-	p.skipComments()
-	if !p.lenCheck() {
-		return nil, p.error("unexpected EOF")
+	rettype, err := p.parseType()
+	if err != nil {
+		return nil, err
 	}
 
 	if p.Tokens[p.Position].Type != token.Delimiter || p.Tokens[p.Position].Value != "{" {
