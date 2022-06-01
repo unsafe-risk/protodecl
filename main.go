@@ -15,14 +15,24 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	file, err := os.ReadFile(absfn)
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	relfn, err := filepath.Rel(currentDir, absfn)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	lexer := NewLexer(absfn, []rune(string(file)))
+	file, err := os.ReadFile(relfn)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	lexer := NewLexer(relfn, []rune(string(file)))
 	var tokens []token.Token
 	for {
 		tok, err := lexer.NextToken()
@@ -36,7 +46,7 @@ func main() {
 		}
 	}
 
-	parser := NewParser(absfn, tokens)
+	parser := NewParser(relfn, tokens)
 	err = parser.Parse()
 	if err != nil {
 		fmt.Println(ErrorPrint(err, string(file)))
