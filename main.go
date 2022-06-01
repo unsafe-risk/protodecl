@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/kr/pretty"
-	"github.com/lemon-mint/protodecl/token"
+	"github.com/unsafe-risk/protodecl/token"
 )
 
 func main() {

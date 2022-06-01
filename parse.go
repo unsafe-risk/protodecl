@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/lemon-mint/protodecl/ast"
-	"github.com/lemon-mint/protodecl/token"
+	"github.com/unsafe-risk/protodecl/ast"
+	"github.com/unsafe-risk/protodecl/token"
 )
 
 type Parser struct {

@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/lemon-mint/protodecl/token"
+import "github.com/unsafe-risk/protodecl/token"
 
 type Tree struct {
 	PackageName string

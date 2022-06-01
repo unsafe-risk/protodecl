@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/lemon-mint/protodecl/token"
+	"github.com/unsafe-risk/protodecl/token"
 )
 
 type Lexer struct {
