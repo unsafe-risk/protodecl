@@ -76,3 +76,14 @@ type IdentifierType struct {
 func (i *IdentifierType) Pos() token.Position {
 	return i.Position
 }
+
+type CommentType struct {
+	Position token.Position
+
+	IsMultiline bool
+	Value       string
+}
+
+func (c *CommentType) Pos() token.Position {
+	return c.Position
+}
