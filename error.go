@@ -22,6 +22,7 @@ func lineIndent(lines []string) string {
 	)
 	itab := 0
 	ispace := 0
+	max := 0
 	for line := range lines {
 		if strings.HasPrefix(lines[line], " ") {
 			ispace++
@@ -34,6 +35,9 @@ func lineIndent(lines []string) string {
 				}
 			}
 			indents[line] = spaces
+			if spaces > max {
+				max = spaces
+			}
 		} else if strings.HasPrefix(lines[line], "\t") {
 			itab++
 			tabs := 0
@@ -43,6 +47,10 @@ func lineIndent(lines []string) string {
 				} else {
 					break
 				}
+			}
+			indents[line] = tabs
+			if tabs > max {
+				max = tabs
 			}
 		}
 	}
@@ -62,10 +70,65 @@ func lineIndent(lines []string) string {
 		return ""
 	}
 
-	if iType == ITYPE_TAB {
-		return strings.Repeat("\t", indent)
+	unitlen := max
+	for line := range indents {
+		if indents[line]/indent < unitlen && indents[line]/indent > 0 {
+			unitlen = indents[line] / indent
+		}
 	}
-	return strings.Repeat(" ", indent)
+
+	if iType == ITYPE_TAB {
+		return strings.Repeat("\t", unitlen*indent)
+	}
+	return strings.Repeat(" ", unitlen*indent)
+}
+
+func CodeError(code []string, line, col, size int, filename, msg string) string {
+	LineNSize := len(strconv.Itoa(line + 2))
+	if size < 1 {
+		size = 1
+	}
+	var pb strings.Builder
+
+	var lines []string = make([]string, 0, 5)
+	for i := line - 2; i <= line+2; i++ {
+		if i >= 0 && i < len(code) {
+			lines = append(lines, code[i])
+		}
+	}
+
+	indent := lineIndent(lines)
+	for i := line - 2; i <= line+2; i++ {
+		if i < 0 || i >= len(code) {
+			continue
+		}
+
+		fmt.Fprintf(&pb, "%d%s| %s\n",
+			i+1,
+			strings.Repeat(" ", LineNSize-len(strconv.Itoa(i+1))),
+			strings.TrimPrefix(code[i], indent),
+		)
+
+		if i+1 == line {
+			ocol := col
+			if strings.HasPrefix(code[i], indent) {
+				col -= len(indent)
+			}
+			if col > 0 {
+				fmt.Fprintf(&pb, "%s| %s%s\n",
+					strings.Repeat(" ", LineNSize),
+					strings.Repeat(" ", col-1),
+					strings.Repeat("^", size),
+				)
+
+				fmt.Fprintf(&pb, "%s| %s\n",
+					strings.Repeat(" ", LineNSize),
+					fmt.Sprintf("%s:%d:%d: %s", filename, line, ocol, msg),
+				)
+			}
+		}
+	}
+	return pb.String()
 }
 
 func ErrorPrint(err error, file string) string {
@@ -75,67 +138,12 @@ func ErrorPrint(err error, file string) string {
 	case *LexerError:
 		Line := e.Line
 		Col := e.Col
-		maxlineNumSize := 0
-		var pLines []string = make([]string, 0, 5)
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				pLines = append(pLines, lines[i])
-				lnsize := len(strconv.Itoa(i))
-				if lnsize > maxlineNumSize {
-					maxlineNumSize = lnsize
-				}
-			}
-		}
-		indent := lineIndent(pLines)
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				lines[i] = strings.TrimPrefix(lines[i], indent)
-			}
-		}
-
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				linesToPrint = append(linesToPrint, fmt.Sprintf("%d%s| %s", i+1, strings.Repeat(" ", maxlineNumSize-len(strconv.Itoa(i))), lines[i]))
-			}
-			if i == Line-1 {
-				linesToPrint = append(linesToPrint, strings.Repeat(" ", maxlineNumSize)+fmt.Sprintf("| %s", strings.Repeat(" ", Col-1)+"^"))
-				linesToPrint = append(linesToPrint, strings.Repeat(" ", maxlineNumSize)+"| "+e.Error())
-			}
-		}
+		return CodeError(lines, Line, Col, 1, e.Filename, e.Message)
 	case *ParserError:
 		Line := e.Position.Line
 		Col := e.Position.Col
 		size := len(e.Tokens[e.Pos].Value)
-		if size <= 0 {
-			size = 1
-		}
-		maxlineNumSize := 0
-		var pLines []string = make([]string, 0, 5)
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				pLines = append(pLines, lines[i])
-				lnsize := len(strconv.Itoa(i))
-				if lnsize > maxlineNumSize {
-					maxlineNumSize = lnsize
-				}
-			}
-		}
-		indent := lineIndent(pLines)
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				lines[i] = strings.TrimPrefix(lines[i], indent)
-			}
-		}
-
-		for i := Line - 2; i <= Line+2; i++ {
-			if i < len(lines) {
-				linesToPrint = append(linesToPrint, fmt.Sprintf("%d%s| %s", i+1, strings.Repeat(" ", maxlineNumSize-len(strconv.Itoa(i))), lines[i]))
-			}
-			if i == Line-1 {
-				linesToPrint = append(linesToPrint, strings.Repeat(" ", maxlineNumSize)+fmt.Sprintf("| %s", strings.Repeat(" ", Col-1)+strings.Repeat("^", size)))
-				linesToPrint = append(linesToPrint, strings.Repeat(" ", maxlineNumSize)+"| "+e.Error())
-			}
-		}
+		return CodeError(lines, Line, Col, size, e.Position.File, e.Message)
 	default:
 		linesToPrint = append(linesToPrint, err.Error())
 	}

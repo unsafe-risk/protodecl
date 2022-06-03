@@ -66,7 +66,7 @@ func (t TokenType) String() string {
 }
 
 func (t Token) String() string {
-	return t.Position.String() + " " + t.TokenType.String()
+	return t.TokenType.String()
 }
 
 func NewToken(t TType, v string, p Position) Token {
