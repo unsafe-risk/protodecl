@@ -121,7 +121,6 @@ func ErrorPrint(err error, file string) string {
 			}
 		}
 		indent := lineIndent(pLines)
-		fmt.Printf("%q\n", indent)
 		for i := Line - 2; i <= Line+2; i++ {
 			if i < len(lines) {
 				lines[i] = strings.TrimPrefix(lines[i], indent)
