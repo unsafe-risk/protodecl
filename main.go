@@ -1,62 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
+	"log"
 
-	"github.com/unsafe-risk/protodecl/token"
+	"github.com/unsafe-risk/protodecl/compile"
+	"github.com/unsafe-risk/protodecl/parser"
 )
 
 func main() {
-	absfn, err := filepath.Abs("example.protodecl")
+	ast, file, err := parser.ParseFile("example.protodecl")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(parser.ErrorPrint(err, string(file)))
 	}
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	relfn, err := filepath.Rel(currentDir, absfn)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	file, err := os.ReadFile(relfn)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	lexer := NewLexer(relfn, []rune(string(file)))
-	var tokens []token.Token
-	for {
-		tok, err := lexer.NextToken()
-		if err != nil {
-			fmt.Println(ErrorPrint(err, string(file)))
-			os.Exit(1)
-		}
-		tokens = append(tokens, tok)
-		if tok.Type == token.EOF {
-			break
-		}
-	}
-
-	parser := NewParser(relfn, tokens)
-	err = parser.Parse()
-	if err != nil {
-		fmt.Println(ErrorPrint(err, string(file)))
-		os.Exit(1)
-	}
-
-	b, err := json.MarshalIndent(parser.Result(), "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(string(b))
+	compile.Compile(ast)
 }
